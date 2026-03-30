@@ -1,51 +1,51 @@
-name: AI Risk Predictor
-on: [push]
+# name: AI Risk Predictor
+# on: [push]
 
-jobs:
-  report-to-brain:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2 # Allows us to compare with the previous commit
+# jobs:
+#   report-to-brain:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 2 # Allows us to compare with the previous commit
 
-      - name: Calculate Commit Stats
-        id: stats
-        run: |
-          # 1. Get the diff stats
-          DIFF=$(git diff --shortstat HEAD^ HEAD 2>/dev/null || git diff --shortstat HEAD)
+#       - name: Calculate Commit Stats
+#         id: stats
+#         run: |
+#           # 1. Get the diff stats
+#           DIFF=$(git diff --shortstat HEAD^ HEAD 2>/dev/null || git diff --shortstat HEAD)
           
-          ADD=$(echo $DIFF | grep -oP '\d+(?=\s+insertion)') || ADD=0
-          DEL=$(echo $DIFF | grep -oP '\d+(?=\s+deletion)') || DEL=0
-          FILES=$(echo $DIFF | grep -oP '\d+(?=\s+file)') || FILES=0
+#           ADD=$(echo $DIFF | grep -oP '\d+(?=\s+insertion)') || ADD=0
+#           DEL=$(echo $DIFF | grep -oP '\d+(?=\s+deletion)') || DEL=0
+#           FILES=$(echo $DIFF | grep -oP '\d+(?=\s+file)') || FILES=0
           
-          # 2. Calculate Refactor Logic in Bash (Avoids YAML syntax errors)
-          IS_REFACTOR=0
-          DIFF_VAL=$((ADD - DEL))
-          # Abs value of DIFF_VAL
-          ABS_DIFF=${DIFF_VAL#-} 
+#           # 2. Calculate Refactor Logic in Bash (Avoids YAML syntax errors)
+#           IS_REFACTOR=0
+#           DIFF_VAL=$((ADD - DEL))
+#           # Abs value of DIFF_VAL
+#           ABS_DIFF=${DIFF_VAL#-} 
           
-          if [ "$ADD" -gt 0 ] && [ "$ABS_DIFF" -lt 10 ]; then
-            IS_REFACTOR=1
-          fi
+#           if [ "$ADD" -gt 0 ] && [ "$ABS_DIFF" -lt 10 ]; then
+#             IS_REFACTOR=1
+#           fi
 
-          # 3. Output all values
-          echo "additions=$ADD" >> $GITHUB_OUTPUT
-          echo "deletions=$DEL" >> $GITHUB_OUTPUT
-          echo "files=$FILES" >> $GITHUB_OUTPUT
-          echo "refactor=$IS_REFACTOR" >> $GITHUB_OUTPUT
+#           # 3. Output all values
+#           echo "additions=$ADD" >> $GITHUB_OUTPUT
+#           echo "deletions=$DEL" >> $GITHUB_OUTPUT
+#           echo "files=$FILES" >> $GITHUB_OUTPUT
+#           echo "refactor=$IS_REFACTOR" >> $GITHUB_OUTPUT
 
-      - name: Send Data to Ubuntu VM
-        run: |
-          curl --max-time 10 -X POST http://20.5.49.24:5000/predict \
-          -H "Content-Type: application/json" \
-          -d '{
-            "owner": "${{ github.repository_owner }}",
-            "repo": "${{ github.event.repository.name }}",
-            "build_id": "${{ github.sha }}",
-            "additions": ${{ steps.stats.outputs.additions }},
-            "deletions": ${{ steps.stats.outputs.deletions }},
-            "files": ${{ steps.stats.outputs.files }},
-            "refactor": ${{ steps.stats.outputs.refactor }}
-          }'
+#       - name: Send Data to Ubuntu VM
+#         run: |
+#           curl --max-time 10 -X POST http://20.5.49.24:5000/predict \
+#           -H "Content-Type: application/json" \
+#           -d '{
+#             "owner": "${{ github.repository_owner }}",
+#             "repo": "${{ github.event.repository.name }}",
+#             "build_id": "${{ github.sha }}",
+#             "additions": ${{ steps.stats.outputs.additions }},
+#             "deletions": ${{ steps.stats.outputs.deletions }},
+#             "files": ${{ steps.stats.outputs.files }},
+#             "refactor": ${{ steps.stats.outputs.refactor }}
+#           }'

@@ -1,0 +1,101 @@
+name: AI-Integrated CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  VM_URL: "http://20.5.49.24:5000"
+
+jobs:
+  # --- JOB 1: THE PREDICTOR (The Scout) ---
+  # Runs instantly to give you a risk assessment on the dashboard.
+  predict-risk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Calculate Commit Stats
+        id: stats
+        run: |
+          DIFF=$(git diff --shortstat HEAD^ HEAD 2>/dev/null || git diff --shortstat HEAD)
+          ADD=$(echo $DIFF | grep -oP '\d+(?=\s+insertion)') || ADD=0
+          DEL=$(echo $DIFF | grep -oP '\d+(?=\s+deletion)') || DEL=0
+          FILES=$(echo $DIFF | grep -oP '\d+(?=\s+file)') || FILES=0
+          
+          # Calculate Refactor Logic
+          IS_REFACTOR=0
+          DIFF_VAL=$((ADD - DEL))
+          ABS_DIFF=${DIFF_VAL#-} 
+          if [ "$ADD" -gt 0 ] && [ "$ABS_DIFF" -lt 10 ]; then IS_REFACTOR=1; fi
+
+          echo "additions=$ADD" >> $GITHUB_OUTPUT
+          echo "deletions=$DEL" >> $GITHUB_OUTPUT
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "refactor=$IS_REFACTOR" >> $GITHUB_OUTPUT
+
+      - name: Send Prediction to VM
+        run: |
+          curl --max-time 10 -X POST ${{ env.VM_URL }}/predict \
+          -H "Content-Type: application/json" \
+          -d '{
+            "owner": "${{ github.repository_owner }}",
+            "repo": "${{ github.event.repository.name }}",
+            "build_id": "${{ github.sha }}",
+            "additions": ${{ steps.stats.outputs.additions }},
+            "deletions": ${{ steps.stats.outputs.deletions }},
+            "files": ${{ steps.stats.outputs.files }},
+            "refactor": ${{ steps.stats.outputs.refactor }}
+          }'
+
+  # --- JOB 2: THE BUILD & FEEDBACK (The Truth) ---
+  # Runs the heavy work and then tells the AI if the build actually passed.
+  build-and-test:
+    needs: predict-risk # Wait for predictor to log the "Guess" first
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Static Web App
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Verify Build Artifacts
+        run: |
+          if [ -f "build/index.html" ] && grep -q "id=\"root\"" build/index.html && [ -d "build/static/js" ]; then
+            echo "✅ Build Verification Passed"
+          else
+            echo "❌ Build Verification Failed"
+            exit 1
+          fi
+
+      - name: Send Final Outcome to AI
+        if: always() # IMPORTANT: Runs even if Build or Verify fails
+        run: |
+          FINAL_OUTCOME="FAILURE"
+          if [ "${{ job.status }}" == "success" ]; then
+            FINAL_OUTCOME="SUCCESS"
+          fi
+
+          curl --max-time 10 -X POST ${{ env.VM_URL }}/feedback \
+          -H "Content-Type: application/json" \
+          -d '{
+            "build_id": "${{ github.sha }}",
+            "actual_outcome": "'$FINAL_OUTCOME'"
+          }'
