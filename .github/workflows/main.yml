@@ -1,0 +1,58 @@
+name: AI Predictor CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pull the code from your repo
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install dependencies (Clean Install)
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Run the Production Build
+      - name: Build Static Web App
+        run: npm run build
+        env:
+          CI: true
+
+      # 5. Pipeline Logic Verification (Smoke Test)
+      # This checks if the build actually contains our Predictor logic
+      - name: Verify Build Artifacts
+        run: |
+          if grep -q "Predictor Logic" build/index.html; then
+            echo "✅ Build contains UI elements."
+          else
+            echo "❌ Build failed: UI elements missing."
+            exit 1
+          fi
+          if [ -d "build/static/js" ]; then
+            echo "✅ JS Bundle generated."
+          else
+            echo "❌ Build failed: JS Bundle missing."
+            exit 1
+          fi
+
+      # 6. Upload the 'build' folder as a GitHub Artifact
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: build/
+          retention-days: 7
