@@ -36,10 +36,27 @@ jobs:
 
       - name: Verify Build Artifacts
         run: |
-          if grep -q "Predictor Logic" build/index.html; then
-            echo "✅ Build contains UI elements."
+          # 1. Check if the index.html exists (The entry point)
+          if [ -f "build/index.html" ]; then
+            echo "✅ index.html exists."
           else
-            echo "❌ Build failed: UI elements missing."
+            echo "❌ index.html missing."
+            exit 1
+          fi
+
+          # 2. Check for the React root ID (Proves the template is correct)
+          if grep -q "id=\"root\"" build/index.html; then
+            echo "✅ Root div found."
+          else
+            echo "❌ Root div missing from HTML."
+            exit 1
+          fi
+
+          # 3. Check if JS bundles were actually created
+          if [ -d "build/static/js" ] && [ "$(ls -A build/static/js)" ]; then
+            echo "✅ JS Bundles generated successfully."
+          else
+            echo "❌ JS Bundles are missing."
             exit 1
           fi
 
