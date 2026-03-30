@@ -137,7 +137,7 @@ export default function App() {
         {page === 'About' && <About />}
       </main>
       <footer className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-widest">
-        Pipeline Build Ver: 2026.03.30-STABLE
+        Pipeline Build Ver: 2026.03.30-STABLE-v01
       </footer>
     </div>
   );
