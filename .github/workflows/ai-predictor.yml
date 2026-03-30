@@ -1,0 +1,40 @@
+name: AI Risk Predictor
+on: [push]
+
+jobs:
+  report-to-brain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Allows us to compare with the previous commit
+
+      - name: Calculate Commit Stats
+        id: stats
+        run: |
+          # Get additions, deletions, and file count
+          # Handle cases where it's the first commit in a repo
+          DIFF=$(git diff --shortstat HEAD^ HEAD 2>/dev/null || git diff --shortstat HEAD)
+          
+          ADD=$(echo $DIFF | grep -oP '\d+(?=\s+insertion)') || ADD=0
+          DEL=$(echo $DIFF | grep -oP '\d+(?=\s+deletion)') || DEL=0
+          FILES=$(echo $DIFF | grep -oP '\d+(?=\s+file)') || FILES=0
+          
+          echo "additions=$ADD" >> $GITHUB_OUTPUT
+          echo "deletions=$DEL" >> $GITHUB_OUTPUT
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+
+      - name: Send Data to Ubuntu VM
+        run: |
+          curl --max-time 10 -X POST http://20.5.49.24:5000/predict \
+          -H "Content-Type: application/json" \
+          -d '{
+            "owner": "${{ github.repository_owner }}",
+            "repo": "${{ github.event.repository.name }}",
+            "build_id": "${{ github.sha }}",
+            "additions": ${{ steps.stats.outputs.additions }},
+            "deletions": ${{ steps.stats.outputs.deletions }},
+            "files": ${{ steps.stats.outputs.files }},
+            "refactor": ${{ (steps.stats.outputs.additions > 0 && (steps.stats.outputs.additions - steps.stats.outputs.deletions < 10)) && 1 || 0 }}
+          }'
