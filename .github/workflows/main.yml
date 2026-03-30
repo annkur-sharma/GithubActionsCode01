@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24' # Updated to Node 24
-          cache: 'npm'
+          # cache: 'npm'
 
       # Fix: If you don't have a package-lock.json, 'npm ci' fails.
       # We use 'npm install' here to ensure the environment builds correctly.
