@@ -1,61 +1,49 @@
-# name: AI Predictor CI Pipeline
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-# on:
-#   push:
-#     branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # VM_URL: "http://20.5.49.24:5000"
 
-# env:
-#   # This clears the deprecation warnings and opts into the new standard
-#   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  # --- JOB 1: THE PREDICTOR (The Scout) ---
+  # Runs instantly to give you a risk assessment on the dashboard.
+  build-process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-# jobs:
-#   build-and-test:
-#     runs-on: ubuntu-latest
+      - name: AI Risk Assessment
+        uses: annkur-sharma/AI-Utility01/predict@v2
 
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: '24' # Updated to Node 24
-#           # cache: 'npm'
+      - name: Install Dependencies
+        run: npm install
 
-#       # Fix: If you don't have a package-lock.json, 'npm ci' fails.
-#       # We use 'npm install' here to ensure the environment builds correctly.
-#       - name: Install Dependencies
-#         run: npm install
+      - name: Build Static Web App
+        run: npm run build
+        env:
+          CI: true
 
-#       - name: Build Static Web App
-#         run: npm run build
-#         env:
-#           CI: true
+      - name: Verify Build Artifacts
+        run: |
+          if [ -f "build/index.html" ] && grep -q "id=\"root\"" build/index.html && [ -d "build/static/js" ]; then
+            echo "✅ Build Verification Passed"
+          else
+            echo "❌ Build Verification Failed"
+            exit 1
+          fi
 
-#       - name: Verify Build Artifacts
-#         run: |
-#           # 1. Check if the index.html exists (The entry point)
-#           if [ -f "build/index.html" ]; then
-#             echo "✅ index.html exists."
-#           else
-#             echo "❌ index.html missing."
-#             exit 1
-#           fi
-
-#           # 2. Check for the React root ID (Proves the template is correct)
-#           if grep -q "id=\"root\"" build/index.html; then
-#             echo "✅ Root div found."
-#           else
-#             echo "❌ Root div missing from HTML."
-#             exit 1
-#           fi
-
-#           # 3. Check if JS bundles were actually created
-#           if [ -d "build/static/js" ] && [ "$(ls -A build/static/js)" ]; then
-#             echo "✅ JS Bundles generated successfully."
-#           else
-#             echo "❌ JS Bundles are missing."
-#             exit 1
-#           fi
+      - name: Send Final Outcome to AI
+        if: always() # IMPORTANT: Runs even if Build or Verify fails
+        uses: annkur-sharma/AI-Utility01/feedback@v2
