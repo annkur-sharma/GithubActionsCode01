@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 2
 
       - name: AI Risk Assessment
-        uses: annkur-sharma/AI-Utility01/predict@v1
+        uses: annkur-sharma/AI-Utility01/predict@v2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,4 +48,4 @@ jobs:
 
       - name: Send Final Outcome to AI
         if: always() # IMPORTANT: Runs even if Build or Verify fails
-        uses: annkur-sharma/AI-Utility01/feedback@v1
+        uses: annkur-sharma/AI-Utility01/feedback@v2
