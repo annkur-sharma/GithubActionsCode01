@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
-// --- Shared Components ---
 const Navbar = ({ setPage, currentPage }) => (
-  <nav className="bg-slate-900 text-white p-4 flex justify-center space-x-4 shadow-2xl border-b-4 border-blue-500">
+  <nav className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/50 border-b border-white/10 p-4 flex justify-center space-x-2">
     {['Home', 'Date & Time', 'AI Predictor', 'About'].map((item) => (
       <button 
         key={item} 
         onClick={() => setPage(item)} 
-        className={`px-4 py-2 rounded-lg font-bold uppercase text-xs tracking-widest transition-all 
+        className={`px-6 py-2 rounded-full text-xs font-black tracking-widest transition-all duration-300
           ${currentPage === item 
-            ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
-            : 'hover:bg-slate-700 text-slate-300'}`}
+            ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105' 
+            : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
       >
         {item}
       </button>
@@ -19,16 +18,22 @@ const Navbar = ({ setPage, currentPage }) => (
 );
 
 const Home = () => (
-  <div className="text-center py-24 animate-fade-in px-4">
-    <div className="inline-block bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-sm font-bold mb-4 border border-blue-200">
-      v1.0.2 Stable
+  <div className="text-center py-32 px-4">
+    <div className="animate-bounce inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-1 rounded-full text-xs font-black mb-6 shadow-lg">
+      SYSTEM ONLINE v1.0.2
     </div>
-    <h1 className="text-6xl font-black text-slate-900 mb-6 tracking-tighter">
-      AI Predictor <span className="text-blue-600 underline decoration-4 underline-offset-8">Pipeline</span>
+    <h1 className="text-7xl font-black mb-6 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">
+      NEURAL <span className="text-blue-500">PIPELINE</span>
     </h1>
-    <p className="text-xl text-slate-600 max-w-lg mx-auto bg-white p-6 rounded-xl border-2 border-slate-200 shadow-sm">
-      This is a sandbox environment for testing <strong>CI/CD build logic</strong> and <strong>React-based AI simulations</strong>.
+    <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
+      A high-performance sandbox for <span className="text-white italic">CI/CD automation</span> and 
+      real-time predictive analytics.
     </p>
+    <div className="mt-10 flex justify-center gap-4">
+        <div className="h-1 w-20 bg-blue-600 rounded-full"></div>
+        <div className="h-1 w-4 bg-slate-700 rounded-full"></div>
+        <div className="h-1 w-4 bg-slate-700 rounded-full"></div>
+    </div>
   </div>
 );
 
@@ -40,13 +45,14 @@ const DateTimePage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center py-20 animate-fade-in">
-      <div className="bg-slate-800 p-12 rounded-3xl shadow-2xl border-4 border-slate-700 text-center text-white">
-        <h2 className="text-blue-400 font-black uppercase tracking-[0.2em] text-sm mb-6">Live Pipeline Clock</h2>
-        <div className="text-7xl font-mono font-black tabular-nums border-y-2 border-slate-700 py-4 mb-4">
-          {time.toLocaleTimeString()}
+    <div className="flex flex-col items-center py-20">
+      <div className="glass-card p-16 rounded-[40px] text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+        <h2 className="text-blue-500 font-black uppercase tracking-[0.3em] text-xs mb-8">System Chronometer</h2>
+        <div className="text-8xl font-mono font-black tabular-nums tracking-tighter text-white mb-4">
+          {time.toLocaleTimeString([], { hour12: false })}
         </div>
-        <div className="text-slate-400 font-bold bg-slate-900/50 py-2 rounded-lg italic">
+        <div className="text-slate-500 font-medium tracking-widest uppercase text-sm">
           {time.toLocaleDateString(undefined, { dateStyle: 'full' })}
         </div>
       </div>
@@ -60,65 +66,71 @@ const AIPage = () => {
   
   const runPrediction = () => {
     setLoading(true);
-    // Simulate a brief delay for the "inference"
     setTimeout(() => {
-      const outcomes = ["High Growth", "Market Volatility", "Steady State", "Correction Expected"];
+      const outcomes = ["OPTIMAL GROWTH", "MARKET VOLATILITY", "STABLE RECOVERY", "BULLISH TREND"];
       const random = Math.floor(Math.random() * outcomes.length);
       setResult({
         prediction: outcomes[random],
-        confidence: (Math.random() * 20 + 80).toFixed(2) + "%",
-        id: "TRX-" + Math.random().toString(36).substr(2, 6).toUpperCase()
+        confidence: (Math.random() * 15 + 84).toFixed(2) + "%",
+        id: "NODE-" + Math.random().toString(36).substr(2, 4).toUpperCase()
       });
       setLoading(false);
-    }, 600);
+    }, 800);
   };
 
   return (
-    <div className="max-w-xl mx-auto py-20 px-4 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 border-2 border-slate-300">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
-          <h2 className="text-2xl font-black text-slate-800">Predictor Logic Engine</h2>
-        </div>
-        
-        <button 
-          onClick={runPrediction}
-          disabled={loading}
-          className={`w-full font-black py-5 rounded-2xl transition-all shadow-lg text-lg uppercase tracking-wider
-            ${loading 
-              ? 'bg-slate-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-95 shadow-blue-200 hover:shadow-blue-300 border-b-4 border-blue-800'}`}
-        >
-          {loading ? 'Processing...' : 'Run Pipeline Logic'}
-        </button>
-
-        {result && !loading && (
-          <div className="mt-10 p-8 bg-slate-900 rounded-2xl border-t-8 border-blue-500 animate-fade-in shadow-xl">
-            <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-              <span className="px-3 py-1 bg-slate-800 text-blue-400 rounded-md text-xs font-mono font-bold">{result.id}</span>
-              <span className="text-xs font-black text-green-400 bg-green-400/10 px-2 py-1 rounded">MATCH: {result.confidence}</span>
+    <div className="max-w-xl mx-auto py-20 px-4">
+      <div className="glass-card rounded-3xl p-1 shadow-2xl">
+        <div className="bg-slate-900/40 rounded-[22px] p-10">
+            <div className="flex items-center justify-between mb-10">
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Inference Engine</h2>
+                <div className="flex space-x-1">
+                    {[1,2,3].map(i => <div key={i} className="w-2 h-2 rounded-full bg-slate-700"></div>)}
+                </div>
             </div>
-            <h3 className="text-4xl font-black text-white text-center tracking-tight">{result.prediction}</h3>
-          </div>
-        )}
+            
+            <button 
+                onClick={runPrediction}
+                disabled={loading}
+                className={`w-full font-black py-6 rounded-xl transition-all relative group overflow-hidden
+                    ${loading ? 'bg-slate-800 cursor-not-allowed' : 'bg-white text-black hover:scale-[1.02]'}`}
+            >
+                <span className="relative z-10">{loading ? 'ANALYZING...' : 'EXECUTE PREDICTION'}</span>
+                {!loading && <div className="absolute inset-0 bg-blue-400 translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-20"></div>}
+            </button>
+
+            {result && !loading && (
+            <div className="mt-8 space-y-4 animate-float">
+                <div className="flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    <span>ID: {result.id}</span>
+                    <span className="text-blue-400">Confidence: {result.confidence}</span>
+                </div>
+                <div className="p-8 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-center">
+                    <h3 className="text-3xl font-black text-blue-400 tracking-tighter">{result.prediction}</h3>
+                </div>
+            </div>
+            )}
+        </div>
       </div>
     </div>
   );
 };
 
 const About = () => (
-  <div className="max-w-2xl mx-auto py-16 px-8 mt-10 animate-fade-in">
-    <div className="bg-white p-10 rounded-2xl border-2 border-slate-200 shadow-md">
-      <h2 className="text-3xl font-black text-slate-900 mb-6 flex items-center">
-        <span className="mr-2">🛠️</span> Pipeline Architecture
-      </h2>
-      <div className="space-y-4">
-        <div className="p-4 bg-slate-50 border-l-4 border-slate-800 rounded-r-lg">
-          <p className="text-slate-700 font-medium"><strong>Frontend:</strong> React 18 with Tailwind CSS v4</p>
-        </div>
-        <div className="p-4 bg-blue-50 border-l-4 border-blue-600 rounded-r-lg text-blue-900">
-          <p><strong>Deployment Path:</strong> GitHub Actions → Static Build → Web Host</p>
-        </div>
+  <div className="max-w-2xl mx-auto py-20 px-4">
+    <div className="glass-card p-10 rounded-3xl">
+      <h2 className="text-2xl font-black text-white mb-8">Architecture Stack</h2>
+      <div className="grid grid-cols-1 gap-4">
+        {[
+            { label: 'Frontend', val: 'React 18 + Tailwind v4', color: 'bg-blue-500' },
+            { label: 'Deployment', val: 'GitHub Actions CI/CD', color: 'bg-purple-500' },
+            { label: 'Environment', val: 'Node.js Production', color: 'bg-emerald-500' }
+        ].map((item, i) => (
+            <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                <span className="text-slate-400 text-sm font-bold">{item.label}</span>
+                <span className={`text-xs font-black px-3 py-1 rounded ${item.color} text-white`}>{item.val}</span>
+            </div>
+        ))}
       </div>
     </div>
   </div>
@@ -128,18 +140,18 @@ export default function App() {
   const [page, setPage] = useState('Home');
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen font-sans selection:bg-blue-500 selection:text-white">
+      <div className="bg-glow"></div>
       <Navbar setPage={setPage} currentPage={page} />
-      <main className="container mx-auto">
+      <main className="container mx-auto px-6">
         {page === 'Home' && <Home />}
         {page === 'Date & Time' && <DateTimePage />}
         {page === 'AI Predictor' && <AIPage />}
         {page === 'About' && <About />}
       </main>
-      <footer className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-widest">
-        Pipeline Build Ver: 2026.03.30-STABLE-v01
+      <footer className="fixed bottom-0 w-full text-center py-6 text-slate-600 text-[10px] font-black uppercase tracking-[0.4em]">
+        Build Log: 2026.04.04 // STABLE_REL_01
       </footer>
     </div>
   );
 }
-
