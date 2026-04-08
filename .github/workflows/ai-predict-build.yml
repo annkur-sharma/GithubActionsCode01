@@ -1,5 +1,3 @@
-name: Production CI Pipeline
-
 on:
   push:
     branches: [ "main" ]
@@ -8,11 +6,10 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  # VM_URL: "http://20.5.49.24:5000"
+  # Define the URL once here to keep it DRY
+  VM_URL: "http://20.5.49.24:5000"
 
 jobs:
-  # --- JOB 1: THE PREDICTOR (The Scout) ---
-  # Runs instantly to give you a risk assessment on the dashboard.
   build-process:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +19,10 @@ jobs:
           fetch-depth: 2
 
       - name: AI Risk Assessment
-        uses: annkur-sharma/AI-Utility01/predict@v2
+        id: ai_predict  # This is the ID we will reference later
+        uses: annkur-sharma/AI-Utility01/predict@v3
+        env:
+          VM_URL: ${{ env.VM_URL }} # Matches the global env above
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -47,5 +47,10 @@ jobs:
           fi
 
       - name: Send Final Outcome to AI
-        if: always() # IMPORTANT: Runs even if Build or Verify fails
-        uses: annkur-sharma/AI-Utility01/feedback@v2
+        if: always() 
+        uses: annkur-sharma/AI-Utility01/feedback@v3
+        env:
+          VM_URL: ${{ env.VM_URL }}
+        with:
+          # Fixed: matched the step ID 'ai_predict' and output name 'txn_uuid'
+          txn_uuid: ${{ steps.ai_predict.outputs.txn_uuid }}
