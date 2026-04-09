@@ -23,16 +23,16 @@ jobs:
         uses: annkur-sharma/AI-Utility01/predict@v3
         env:
           VM_URL: ${{ env.VM_URL }} # Matches the global env above
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Build Static Web App
         run: npm run build
         env:
           CI: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
 
       - name: Install Dependencies
         run: npm install
