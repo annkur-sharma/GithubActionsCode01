@@ -24,6 +24,11 @@ jobs:
         env:
           VM_URL: ${{ env.VM_URL }} # Matches the global env above
 
+      - name: Build Static Web App
+        run: npm run build
+        env:
+          CI: true
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,11 +36,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-
-      - name: Build Static Web App
-        run: npm run build
-        env:
-          CI: true
 
       - name: Verify Build Artifacts
         run: |
