@@ -20,7 +20,7 @@ jobs:
 
       - name: AI Risk Assessment
         id: ai_predict  # This is the ID we will reference later
-        uses: annkur-sharma/AI-Utility01/predict@v5
+        uses: annkur-sharma/AI-Utility01/predict@v7
         env:
           VM_URL: ${{ env.VM_URL }} # Matches the global env above
       
@@ -47,12 +47,13 @@ jobs:
           fi
 
       - name: Send Final Outcome to AI
-        if: always() 
-        uses: annkur-sharma/AI-Utility01/feedback@v5
+        if: always() # CRITICAL: Ensure feedback runs even if build fails
+        uses: annkur-sharma/AI-Utility01/feedback@v7
         env:
           VM_URL: ${{ env.VM_URL }}
         with:
-          # Fixed: matched the step ID 'ai_predict' and output name 'txn_uuid'
+          # Ensure this ID matches the 'id' in the assessment step above
           txn_uuid: ${{ steps.ai_predict.outputs.txn_uuid }}
+          outcome: ${{ job.status }}
 
           
