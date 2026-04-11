@@ -36,7 +36,6 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
-
 .glass-card {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(12px);
