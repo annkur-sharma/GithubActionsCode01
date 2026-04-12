@@ -7,7 +7,7 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # Define the URL once here to keep it DRY
-  VM_URL: "http://20.5.49.24:5000"
+  VM_URL: " https://223f-122-173-29-143.ngrok-free.app"
 
 jobs:
   build-process:
