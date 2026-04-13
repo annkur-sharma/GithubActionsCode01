@@ -58,11 +58,11 @@ def call_fastapi_auditor(add, del_count, file_count, files_data):
             result = json.loads(response.read().decode())
             return result
     except Exception as e:
-        print(f"⚠️ Auditor connection failed: {e}")
+        print(f"⚠️ CORE-AI Predictor connection failed: {e}")
         return {"risk_score": 0, "action": "allow"}
 
 def main():
-    print("🤖 AI Auditor: Checking local commit risk...")
+    print("🤖 CORE-AI Predictor: Checking local commit risk...")
     add, del_count, file_count, files_data = get_git_metadata()
     
     if file_count == 0:
@@ -76,12 +76,11 @@ def main():
     action = result.get("action", "allow")
 
     if action == "block":
-        print(f"❌ COMMIT BLOCKED: Risk score too high ({risk_score})")
+        print(f"❌ CORE-AI Predictor: COMMIT BLOCKED: Risk score too high ({risk_score})")
         # You could also print the reason if your API returns one
         sys.exit(1)
     
-    print(f"✅ AI Audit Passed (Score: {risk_score}).")
-    print(f"✅ AI Audit Passed (Score: {risk_score}) [TXN: {result.get('uuid', 'N/A')}]")
+    print(f"✅ CORE-AI Predictor: Audit Passed (Score: {risk_score}) [TXN: {result.get('uuid', 'N/A')}]")
     sys.exit(0)
 
 if __name__ == "__main__":
