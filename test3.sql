@@ -9,19 +9,3 @@ INSERT INTO TABLENAME VALUES (1, 'abc')
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
