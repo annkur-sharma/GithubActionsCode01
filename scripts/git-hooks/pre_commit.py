@@ -4,22 +4,54 @@ import json
 import urllib.request
 
 def get_git_metadata():
-    # Get number of files changed
-    files = subprocess.check_output(['git', 'diff', '--cached', '--name-only']).decode().split()
-    
-    # Get total lines added
-    diff_data = subprocess.check_output(['git', 'diff', '--cached']).decode()
-    lines_added = len([line for line in diff_data.split('\n') if line.startswith('+') and not line.startswith('+++')])
-    
-    return len(files), lines_added
-
-def call_fastapi_auditor(files, lines):
-    url = "https://d4f8-122-173-29-143.ngrok-free.app/predict"
-    data = json.dumps({"files_changed": files, "lines_changed": lines}).encode('utf-8')
-    
-    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
     try:
-        with urllib.request.urlopen(req) as response:
+        # Using --numstat to get additions, deletions, and filenames (staged changes only)
+        # This matches the 'granular' logic in your agent.py
+        cmd = ["git", "diff", "--cached", "--numstat"]
+        result = subprocess.check_output(cmd).decode('utf-8')
+        
+        files_data = []
+        total_a, total_d = 0, 0
+        
+        if not result.strip():
+            return 0, 0, 0, []
+
+        for line in result.strip().split('\n'):
+            # Handle cases where files might be renamed or have special characters
+            parts = line.split('\t')
+            if len(parts) == 3:
+                a, d, name = parts
+                # Handle binary files which show '-' instead of numbers
+                a_val = int(a) if a.isdigit() else 0
+                d_val = int(d) if d.isdigit() else 0
+                
+                files_data.append({"file": name, "a": a_val, "d": d_val})
+                total_a += a_val
+                total_d += d_val
+        
+        return total_a, total_d, len(files_data), files_data
+    except Exception as e:
+        print(f"Error gathering local git stats: {e}")
+        return 0, 0, 0, []
+
+def call_fastapi_auditor(add, del_count, file_count, files_data):
+    # Your Ngrok URL
+    url = "https://d4f8-122-173-29-143.ngrok-free.app/predict"
+    
+    # Matching the payload structure of agent.py exactly
+    payload = {
+        "additions": add,
+        "deletions": del_count,
+        "files": file_count,
+        "files_data": files_data,
+        "source": "local_pre_commit" # Good to tell your API this is local!
+    }
+    
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+    
+    try:
+        with urllib.request.urlopen(req, timeout=5) as response:
             result = json.loads(response.read().decode())
             return result
     except Exception as e:
@@ -27,17 +59,25 @@ def call_fastapi_auditor(files, lines):
         return {"risk_score": 0, "action": "allow"}
 
 def main():
-    print("🤖 AI Auditor: Checking commit risk...")
-    files, lines = get_git_metadata()
+    print("🤖 AI Auditor: Checking local commit risk...")
+    add, del_count, file_count, files_data = get_git_metadata()
     
-    # Your RandomForest prediction via API
-    result = call_fastapi_auditor(files, lines)
+    if file_count == 0:
+        print("✅ No staged changes detected.")
+        sys.exit(0)
+
+    # Call API with expanded metrics
+    result = call_fastapi_auditor(add, del_count, file_count, files_data)
     
-    if result.get("action") == "block":
-        print(f"❌ COMMIT BLOCKED: Risk score too high ({result.get('risk_score')})")
+    risk_score = result.get("risk_score", 0)
+    action = result.get("action", "allow")
+
+    if action == "block":
+        print(f"❌ COMMIT BLOCKED: Risk score too high ({risk_score})")
+        # You could also print the reason if your API returns one
         sys.exit(1)
     
-    print("✅ Logic Check Passed.")
+    print(f"✅ AI Audit Passed (Score: {risk_score}).")
     sys.exit(0)
 
 if __name__ == "__main__":
