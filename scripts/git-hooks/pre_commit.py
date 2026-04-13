@@ -36,7 +36,7 @@ def get_git_metadata():
 
 def call_fastapi_auditor(add, del_count, file_count, files_data):
     # Your Ngrok URL
-    url = "https://d4f8-122-173-29-143.ngrok-free.app/predict"
+    url = "https://973e-122-173-29-143.ngrok-free.app/predict"
     
     # Matching the payload structure of agent.py exactly
     payload = {
