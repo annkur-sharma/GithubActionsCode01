@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# This small shell script is required even on Windows 
+# to tell Git to hand off the work to Python.
+
+python pre_commit.py
