@@ -40,11 +40,14 @@ def call_fastapi_auditor(add, del_count, file_count, files_data):
     
     # Matching the payload structure of agent.py exactly
     payload = {
+        "owner": "local_dev", # Or use subprocess to get git config user.name
+        "repo": "GithubActionsCode01",
+        "build_id": "local_draft", 
+        "workflow": "local_pre_commit",
         "additions": add,
         "deletions": del_count,
         "files": file_count,
-        "files_data": files_data,
-        "source": "local_pre_commit" # Good to tell your API this is local!
+        "files_data": files_data
     }
     
     data = json.dumps(payload).encode('utf-8')
