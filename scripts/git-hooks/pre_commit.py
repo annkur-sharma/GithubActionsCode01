@@ -49,6 +49,8 @@ def call_fastapi_auditor(add, del_count, file_count, files_data):
         "files": file_count,
         "files_data": files_data
     }
+
+    print(payload)
     
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
