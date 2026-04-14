@@ -34,17 +34,39 @@ def get_git_metadata():
         print(f"Error gathering local git stats: {e}")
         return 0, 0, 0, []
 
-def call_fastapi_auditor(add, del_count, file_count, files_data):
+def get_git_info():
+    """Fetches User, Repo, and Commit ID from local git config/history"""
+    try:
+        # Get User Name (from git config)
+        user = subprocess.check_output(["git", "config", "user.name"]).decode('utf-8').strip()
+        
+        # Get Repo Name (from the remote URL, e.g., 'GithubActionsCode01')
+        remote_url = subprocess.check_output(["git", "remote", "get-url", "origin"]).decode('utf-8').strip()
+        repo = remote_url.split('/')[-1].replace('.git', '')
+        
+        # Get Current Commit Hash (as a draft Build ID)
+        # We use 'HEAD' to see what the previous commit was, or 'draft' if it's brand new
+        try:
+            build_id = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode('utf-8').strip()
+        except:
+            build_id = "local_commit"
+
+        return user, repo, build_id
+    except Exception as e:
+        return "local_dev", "unknown_repo", "local_draft"
+
+def call_fastapi_auditor(add_count, del_count, file_count, files_data):
     # Your Ngrok URL
     url = "https://0f5d-122-173-29-143.ngrok-free.app/predict"
-    
+    username, repo_name, current_sha = get_git_info()
+
     # Matching the payload structure of agent.py exactly
     payload = {
-        "owner": "local_dev", # Or use subprocess to get git config user.name
-        "repo": "GithubActionsCode01",
-        "build_id": "local_draft", 
+        "owner": username, # Or use subprocess to get git config user.name
+        "repo": repo_name,
+        "build_id": current_sha,  # Picks up the 40-char SHA
         "workflow": "local_pre_commit",
-        "additions": add,
+        "additions": add_count,
         "deletions": del_count,
         "files": file_count,
         "files_data": files_data
@@ -63,14 +85,14 @@ def call_fastapi_auditor(add, del_count, file_count, files_data):
 
 def main():
     print("🤖 C.O.R.E.AI Predictor: Checking local commit risk...")
-    add, del_count, file_count, files_data = get_git_metadata()
-    
+    add_count, del_count, file_count, files_data = get_git_metadata()
+
     if file_count == 0:
-        print("✅ No staged changes detected.")
+        print("✅ [C.O.R.E.AI] - No staged changes detected.")
         sys.exit(0)
 
     # 1. Call API
-    result = call_fastapi_auditor(add, del_count, file_count, files_data)
+    result = call_fastapi_auditor(add_count, del_count, file_count, files_data)
     
     # 2. Extract the actual prediction string from the response
     prediction = result.get("prediction", "UNKNOWN")

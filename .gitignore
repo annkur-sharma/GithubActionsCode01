@@ -1,2 +1,4 @@
 scripts/git-hooks/*
 scripts/*
+scripts\*
+scripts\git-hooks\*
