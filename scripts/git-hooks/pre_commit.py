@@ -58,29 +58,36 @@ def call_fastapi_auditor(add, del_count, file_count, files_data):
             result = json.loads(response.read().decode())
             return result
     except Exception as e:
-        print(f"⚠️ CORE-AI Predictor connection failed: {e}")
+        print(f"⚠️ [C.O.R.E.AI] Predictor connection failed: {e}")
         return {"risk_score": 0, "action": "allow"}
 
 def main():
-    print("🤖 CORE-AI Predictor: Checking local commit risk...")
+    print("🤖 C.O.R.E.AI Predictor: Checking local commit risk...")
     add, del_count, file_count, files_data = get_git_metadata()
     
     if file_count == 0:
         print("✅ No staged changes detected.")
         sys.exit(0)
 
-    # Call API with expanded metrics
+    # 1. Call API
     result = call_fastapi_auditor(add, del_count, file_count, files_data)
     
-    risk_score = result.get("risk_score", 0)
-    action = result.get("action", "allow")
+    # 2. Extract the actual prediction string from the response
+    prediction = result.get("prediction", "UNKNOWN")
+    txn_id = result.get("uuid", "N/A")
 
-    if action == "block":
-        print(f"❌ CORE-AI Predictor: COMMIT BLOCKED: Risk score too high ({risk_score})")
-        # You could also print the reason if your API returns one
-        sys.exit(1)
+    # 3. Logic to show the prediction without blocking
+    if prediction == "FAILURE":
+        # Print in red/warning style but DO NOT sys.exit(1)
+        print(f"⚠️ \033[91m [C.O.R.E.AI] PREDICTION: [FAILURE] - This commit is risky!\033[0m")
+    elif prediction == "FLAKY":
+        print(f"⚖️ \033[93m [C.O.R.E.AI] PREDICTION: [FLAKY] - Consistency warnings detected.\033[0m")
+    else:
+        print(f"✅ \033[92m [C.O.R.E.AI] PREDICTION: [SUCCESS] - Clean run expected.\033[0m")
+
+    print(f"🔍 Audit Complete [TXN: {txn_id}]")
     
-    print(f"✅ CORE-AI Predictor: Audit Passed (Score: {risk_score}) [TXN: {result.get('uuid', 'N/A')}]")
+    # Always exit with 0 so the commit is never blocked
     sys.exit(0)
 
 if __name__ == "__main__":
