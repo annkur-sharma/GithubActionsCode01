@@ -3,6 +3,45 @@ import sys
 import json
 import urllib.request
 
+def get_predicted_sha():
+    try:
+        # 1. Write the current staged changes to a tree object
+        # This represents the state of the files as they are 'staged'
+        tree_sha = subprocess.check_output(['git', 'write-tree'], text=True).strip()
+
+        # 2. Check if the repository has a history (is there a HEAD?)
+        has_history = True
+        try:
+            subprocess.check_call(['git', 'rev-parse', '--verify', 'HEAD'], 
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            has_history = False
+
+        # 3. Simulate the commit object creation
+        if has_history:
+            parent_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+            # Simulate commit with current staged tree and existing parent
+            sha = subprocess.check_output(
+                ['git', 'commit-tree', tree_sha, '-p', parent_sha, '-m', '[C.O.R.E.AI] Virtual Commit'], 
+                text=True
+            ).strip()
+        else:
+            # Handle Initial Commit (No parents)
+            sha = subprocess.check_output(
+                ['git', 'commit-tree', tree_sha, '-m', '[C.O.R.E.AI] Initial Commit'], 
+                text=True
+            ).strip()
+
+        return sha[:7]  # Return Short SHA (e.g., 4010b4a)
+
+    except Exception as e:
+        # Fallback if git commands fail (e.g., not in a git repo)
+        return "local_pending"
+
+# Usage in your hook
+predicted_sha = get_predicted_sha()
+print(f"🔗 Predicted Commit SHA: {predicted_sha}")
+
 def get_git_metadata():
     try:
         # Using --numstat to get additions, deletions, and filenames (staged changes only)
