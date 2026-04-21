@@ -101,6 +101,7 @@ def call_fastapi_auditor(add_count, del_count, file_count, files_data):
 
     # Matching the payload structure of agent.py exactly
     payload = {
+        "source": "GIT_PRE_COMMIT",
         "owner": username, # Or use subprocess to get git config user.name
         "repo": repo_name,
         "build_id": current_sha,  # Picks up the 40-char SHA
