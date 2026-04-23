@@ -94,17 +94,17 @@ def get_git_info():
     except Exception as e:
         return "local_dev", "unknown_repo", "local_draft"
 
-def call_fastapi_auditor(add_count, del_count, file_count, files_data):
+def call_fastapi_auditor(add_count, del_count, file_count, files_data, predicted_sha):
     # Your Ngrok URL
     url = "https://7a82-122-173-29-143.ngrok-free.app/predict"
-    username, repo_name, current_sha = get_git_info()
+    username, repo_name, _ = get_git_info()
 
     # Matching the payload structure of agent.py exactly
     payload = {
         "source": "GIT_PRE_COMMIT",
         "owner": username, # Or use subprocess to get git config user.name
         "repo": repo_name,
-        "build_id": current_sha,  # Picks up the 40-char SHA
+        "build_id": predicted_sha,  # Picks up the 40-char SHA
         "workflow": "local_pre_commit",
         "additions": add_count,
         "deletions": del_count,
@@ -132,9 +132,12 @@ def main():
     if file_count == 0:
         print("✅ [C.O.R.E.AI] - No staged changes detected.")
         sys.exit(0)
+    
+    # 0. Get the Virtual SHA (the prediction of the future)
+    predicted_sha = get_predicted_sha()
 
     # 1. Call API
-    result = call_fastapi_auditor(add_count, del_count, file_count, files_data)
+    result = call_fastapi_auditor(add_count, del_count, file_count, files_data, predicted_sha)
     
     # 2. Extract the actual prediction string from the response
     prediction = result.get("prediction", "UNKNOWN")
