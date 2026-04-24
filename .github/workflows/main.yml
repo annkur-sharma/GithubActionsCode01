@@ -20,7 +20,7 @@ jobs:
 
       - name: AI Risk Assessment
         id: ai_predict  # This is the ID we will reference later
-        uses: annkur-sharma/AI-Utility01/predict@v7
+        uses: annkur-sharma/AI-Utility01/predict@v8
         env:
           VM_URL: ${{ env.VM_URL }} # Matches the global env above
 
@@ -48,7 +48,7 @@ jobs:
 
       - name: Send Final Outcome to AI
         if: always() # CRITICAL: Ensure feedback runs even if build fails
-        uses: annkur-sharma/AI-Utility01/feedback@v7
+        uses: annkur-sharma/AI-Utility01/feedback@v8
         env:
           VM_URL: ${{ env.VM_URL }}
         with:
