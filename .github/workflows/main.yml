@@ -29,11 +29,11 @@ jobs:
         with:
           node-version: '24'
 
-      # - name: Install Dependencies
-      #   run: npm install
+      - name: Install Dependencies
+        run: npm install
 
       - name: Build Static Web App
-        run: npm run build
+        run: npm run # build
         env:
           CI: true
 
