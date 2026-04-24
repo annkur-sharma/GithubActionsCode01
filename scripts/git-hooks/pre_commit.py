@@ -32,7 +32,7 @@ def get_predicted_sha():
                 text=True
             ).strip()
 
-        return sha[:7]  # Return Short SHA (e.g., 4010b4a)
+        return sha  # Return Short SHA (e.g., 4010b4a)
 
     except Exception as e:
         # Fallback if git commands fail (e.g., not in a git repo)
