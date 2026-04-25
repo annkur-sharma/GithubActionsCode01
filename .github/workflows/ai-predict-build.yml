@@ -1,0 +1,57 @@
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Define the URL once here to keep it DRY
+  VM_URL: ${{ vars.VM_URL }}
+
+jobs:
+  build-process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: AI Risk Assessment
+        id: ai_predict  # This is the ID we will reference later
+        uses: annkur-sharma/AI-Utility01/predict@v8
+        env:
+          VM_URL: ${{ env.VM_URL }} # Matches the global env above
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Static Web App
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Verify Build Artifacts
+        run: |
+          if [ -f "build/index.html" ] && grep -q "id=\"root\"" build/index.html && [ -d "build/static/js" ]; then
+            echo "✅ Build Verification Passed"
+          else
+            echo "❌ Build Verification Failed"
+            exit 1
+          fi
+
+      - name: Send Final Outcome to AI
+        if: always() # CRITICAL: Ensure feedback runs even if build fails
+        uses: annkur-sharma/AI-Utility01/feedback@v8
+        env:
+          VM_URL: ${{ env.VM_URL }}
+        with:
+          # Ensure this ID matches the 'id' in the assessment step above
+          txn_uuid: ${{ steps.ai_predict.outputs.txn_uuid }}
+          outcome: ${{ job.status }}
