@@ -56,17 +56,6 @@ Write-Host "Hello World"
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 PS1 file
 
 
